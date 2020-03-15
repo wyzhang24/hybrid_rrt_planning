@@ -28,7 +28,7 @@ int main(int argc, char **argv){
 
     ros::NodeHandle n;
     std::cout <<"im here" << std::endl;
-    ros::Subscriber sub = n.subscribe("path", 1000, pathCallback);
+    ros::Subscriber sub = n.subscribe<hybrid_rrt::path_list>("path", 1000, pathCallback);
 
     ros::spin();   
 

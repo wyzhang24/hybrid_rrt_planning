@@ -1,0 +1,8 @@
+prefix=/home/weiyang/hybrid_rrt_planning/devel
+
+Name: control_mcity
+Description: Description of control_mcity
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/weiyang/hybrid_rrt_planning/devel/lib 
+Requires: 

@@ -1,0 +1,8 @@
+prefix=/home/weiyang/hybrid_rrt_planning/devel
+
+Name: mcity_msg
+Description: Description of mcity_msg
+Version: 0.0.0
+Cflags: -I/home/weiyang/hybrid_rrt_planning/devel/include
+Libs: -L/home/weiyang/hybrid_rrt_planning/devel/lib 
+Requires: message_runtime std_msgs

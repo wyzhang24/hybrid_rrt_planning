@@ -1,0 +1,8 @@
+prefix=/home/weiyang/hybrid_rrt_planning/devel
+
+Name: dbw_mkz_msgs
+Description: Description of dbw_mkz_msgs
+Version: 1.2.8
+Cflags: -I/home/weiyang/hybrid_rrt_planning/devel/include
+Libs: -L/home/weiyang/hybrid_rrt_planning/devel/lib 
+Requires: message_runtime std_msgs geometry_msgs
