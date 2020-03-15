@@ -1,0 +1,8 @@
+prefix=/home/weiyang/hybrid_rrt_planning/devel
+
+Name: hybrid_rrt
+Description: Description of hybrid_rrt
+Version: 0.0.0
+Cflags: -I/home/weiyang/hybrid_rrt_planning/devel/include
+Libs: -L/home/weiyang/hybrid_rrt_planning/devel/lib 
+Requires: 
