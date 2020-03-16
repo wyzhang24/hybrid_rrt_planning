@@ -10,15 +10,14 @@
 // const double D2R = PI/180.0;
 // const double R2D = 180.0/PI;
 
-const double step_len = 0.25;
+const double step_len = 0.5;
 
-const double xrange_map = 13;
-const double yrange_map = 13;
+const double xrange_map = 20;
+const double yrange_map = 20;
 
-const double max_yaw_range = 25.0 * PI / 180.0; // the maximum yaw it can reach
-const int max_attemp_num = 10; //cf: 3
+const double max_yaw_range = 4.0 * PI / 180.0; // the maximum yaw it can reach
+const int max_attemp_num = 20; //cf: 3
 extern std::vector<std::vector<double>> obstacles = {};
-
 
 const double car_radius = 0.18;
 

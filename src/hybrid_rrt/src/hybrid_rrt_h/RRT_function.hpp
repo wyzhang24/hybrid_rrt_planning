@@ -108,8 +108,10 @@ bool is_incollsion(Node* node){
 Node RANDOM_CONFIG(){
     //cout << rand() << endl;
     double rand_goal = (double(rand()) / RAND_MAX);
-    double rand_x = (double(rand()) / RAND_MAX)* xrange_map - xrange_map;
-    double rand_y = (double(rand()) / RAND_MAX)* yrange_map - yrange_map;
+    // double rand_x = (double(rand()) / RAND_MAX)* xrange_map - xrange_map;
+    // double rand_y = (double(rand()) / RAND_MAX)* yrange_map - yrange_map;
+    double rand_x = (double(rand()) / RAND_MAX)* xrange_map;
+    double rand_y = (double(rand()) / RAND_MAX)* yrange_map;
     double rand_angle = wrap2pi((double(rand()))/ RAND_MAX * 2* PI);
     //cout << "rand_angle:" << rand_angle << endl;
     //if(rand_goal > 0.8) return Node(goal[0], goal[1]);

@@ -46,7 +46,7 @@ public:
     cout << "waitting for receiving msgs" << endl;
     //Topic want to subscribe
     submode_ = n_.subscribe<std_msgs::String>("/car_mode",1,&AutoparkingControl::modeCallback, this);
-    subveh_ = n_.subscribe<nav_msgs::Odometry>("/modified_odom", 1, &AutoparkingControl::mainCallback, this);
+    subveh_ = n_.subscribe<nav_msgs::Odometry>("/gps/odom", 1, &AutoparkingControl::mainCallback, this);
     subspeed_ = n_.subscribe<dbw_mkz_msgs::WheelSpeedReport>("/vehicle/wheel_speed_report", 1, &AutoparkingControl::speedCallback, this);
 
     subpath_ = n_.subscribe<hybrid_rrt::path_list>("path", 1000, &AutoparkingControl::pathCallback, this);
@@ -70,6 +70,10 @@ public:
     command.gear_cmd = gear_desired;
     cout << "switch should be switched to gear " << command.gear_cmd << endl;
     pubcmd_.publish(command);
+    ros::Rate loop_rate(1);
+    loop_rate.sleep();
+
+
   }
 
   void modeCallback(const std_msgs::String::ConstPtr &msg)
@@ -83,10 +87,11 @@ public:
     std::cout << "receive path num: " << num << std::endl;
     for(int i = 0; i < num; ++i){
         hybrid_rrt::path_point pt = pth->path[i];
-        path.x.push_back(pt.x);
-        path.y.push_back(pt.y);
+        path.x.push_back(pt.y);
+        path.y.push_back(pt.x);
         path.yaw.push_back(pt.yaw);
         path.yaw1.push_back(0);
+        path.steer.push_back(0);
         path.direction.push_back(pt.dir);
         std::cout << "x: " << pt.x << " y: " << pt.y <<  " yaw: " << pt.yaw << " dir: " << pt.dir << std::endl;
     }
@@ -100,9 +105,21 @@ public:
     speed = speed/(2*PI); //round per second
     speed = speed * PI * diameter; //meter per second
   }
+  
+  double quaterniontoyaw(double x, double y, double z, double w) {
+        double roll, pitch, yaw;
+        tf::Quaternion q(
+            x,
+            y,
+            z,
+            w
+        );
+        tf::Matrix3x3 m(q);
+        m.getRPY(roll, pitch, yaw);
+        return yaw;
+  }
 
-
-  void mainCallback(const nav_msgs::Odometry::ConstPtr &vehicle_current_info)
+  void mainCallback(const nav_msgs::Odometry::ConstPtr &msg)
   {    
     cout << "get in main callback" << endl;    
     //Set up unsued control peranmeter
@@ -110,10 +127,24 @@ public:
     command.timestamp = 0;
     command.turn_signal_cmd = 0;
     // Get vehicle position
-    
-    current_x = vehicle_current_info->pose.pose.position.x;
-    current_y = vehicle_current_info->pose.pose.position.y;
-    current_yaw = vehicle_current_info->pose.pose.position.z;
+    if(!onetimecheck) {
+      initial_x = msg->pose.pose.position.x;
+      initial_y = msg->pose.pose.position.y;
+      initial_yaw = quaterniontoyaw(msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z, msg->pose.pose.orientation.w);
+      onetimecheck = true;
+    }
+    // if(onetimecheck) {
+    //     odom.pose.pose.position.x = msg.pose.pose.position.x - initial_x;
+    //     odom.pose.pose.position.y = msg.pose.pose.position.y - initial_y;
+    //     odom.pose.pose.orientation.z = quaterniontoyaw(msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w) - initial_yaw;
+    // }
+
+    current_x = msg->pose.pose.position.x - initial_x;
+    current_y = msg->pose.pose.position.y - initial_y;
+    current_yaw = quaterniontoyaw(msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z, msg->pose.pose.orientation.w) - initial_yaw;
+
+    cout << "current location: " << current_x << " " << current_y << " " << current_yaw << endl;
+
     /*
     tf::Quaternion q(
       vehicle_current_info->pose.pose.orientation.x,
@@ -155,25 +186,29 @@ public:
     else if(car_mode == "followpath"){
       //First time enter the follow path mode, read the path
       cout << "ENTER THE PATH FOLLOWING MODE" <<endl;
+
+
       if(first_time){ 
+        cout << "no path!" << endl;
+        return;
         // Load the whole map and save it to "path"
-        cout << "starting read path" <<endl;
-        string filename = "pose.dat";
-        ifstream fin(filename);
-        if (!fin.is_open()) {
-          cout << "Open Failed !!!!" << endl;
-        }
-        while(fin >> xp >> yp >> yyp >> dp){
-          path.x.push_back(stod(xp));
-          path.y.push_back(stod(yp));
-          path.yaw.push_back(stod(yyp));
-          path.yaw1.push_back(0);
-          path.steer.push_back(0);
-          path.direction.push_back(stod(dp));
-        }
-        first_time = false;
-        cout << "finished read path" <<endl;
-        savefile_realpath.open("real_path");
+        // cout << "starting read path" <<endl;
+        // string filename = "pose.dat";
+        // ifstream fin(filename);
+        // if (!fin.is_open()) {
+        //   cout << "Open Failed !!!!" << endl;
+        // }
+        // while(fin >> xp >> yp >> yyp >> dp){
+        //   path.x.push_back(stod(xp));
+        //   path.y.push_back(stod(yp));
+        //   path.yaw.push_back(stod(yyp));
+        //   path.yaw1.push_back(0);
+        //   path.steer.push_back(0);
+        //   path.direction.push_back(stod(dp));
+        // }
+        // first_time = false;
+        // cout << "finished read path" <<endl;
+        // savefile_realpath.open("real_path");
       }
       if(seg){
         //Segmentate the whole path into pieces according to the change direction point
@@ -200,13 +235,14 @@ public:
           path_seg.steer.push_back(path.steer[idx]);
           path_seg.direction.push_back(path.direction[idx]);
         } 
-        cout << "generated the segment path" <<endl;
+        cout << "generated the segment path" << " path num: " << path_seg.x.size() << endl;
         path_seg.cost = 0;
         path_ = &path_seg;
         curr_idx = 0;
         seg = false;
         cout << "reverse point" << idx << endl;
         if (path_seg.direction[0] > 0.5) {
+          cout << path_seg.direction[0] << endl;
           shift_gear(4);
         }
         else{
@@ -215,6 +251,7 @@ public:
         cout << "gear is shifted to the proper position accordingly" << endl;
       }
 
+      // path_ = &path;
       //Update the index to find the closest waypoints that is ahead or behind of the car according to path direction
       cout << "cur_idx before update " << curr_idx <<endl;
       find_closest_idx(path_, current_x, current_y, curr_idx);
@@ -294,7 +331,7 @@ public:
             command.turn_signal_cmd = 2;
           }
         }
-        
+  
         command.gear_cmd = 0;
         pubcmd_.publish(command);
       }
@@ -348,6 +385,7 @@ private:
   vector <double> control_command;
   //Indicator
   string car_mode = "followpath";
+  // string car_mode = "stop";
   bool first_time = true;
   bool first_info = true;
   bool seg = true;
@@ -355,6 +393,10 @@ private:
   bool first_go_straight = true;
   bool first_stop = true;
   int end_flag = 0;
+  bool onetimecheck = false;
+  double initial_x = 0;
+  double initial_y = 0;
+  double initial_yaw = 0;
 
   //to read path
   string xp;
