@@ -15,7 +15,7 @@ const double step_len = 0.5;
 const double xrange_map = 20;
 const double yrange_map = 20;
 
-const double max_yaw_range = 4.0 * PI / 180.0; // the maximum yaw it can reach
+const double max_yaw_range = 2.0 * PI / 180.0; // the maximum yaw it can reach
 const int max_attemp_num = 20; //cf: 3
 extern std::vector<std::vector<double>> obstacles = {};
 
@@ -29,7 +29,7 @@ extern bool reverse_sign = false;
 
 const double threshod = 0.15;
 
-const int max_iteration = 100000;
+const int max_iteration = 1000000;
 
 const std::string trapped = "Trapped";
 const std::string reached = "Reached";

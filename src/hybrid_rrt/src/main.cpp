@@ -26,13 +26,22 @@ int main(int argc, char **argv){
         // loop_rate.sleep();
     vector<array<double,2>> obt;
 
-    for(int i = 0 ; i < 50; ++i){
-        obt.push_back({25, i*0.1});
+    // for(int i = 0 ; i < 50; ++i){
+    //     obt.push_back({25, i*0.1});
+    // }
+
+
+
+    // vector<vector<double>> path_list = execute_rrt(obt, {0, 0, 0, 0, 0}, {100, 0, 0, 0, 0});
+
+    vector<vector<double>> path_list;
+
+    for(int i = 0; i < 10000; ++i){
+        path_list.push_back({i*0.01, 0, 0,1});
+
     }
 
 
-
-    vector<vector<double>> path_list = execute_rrt(obt, {0, 0, 0, 0, 0}, {50, 0, 0, 0, 0});
 
     for(auto p:path_list){
 

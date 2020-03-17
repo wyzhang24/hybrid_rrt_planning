@@ -57,6 +57,7 @@ public:
   void shift_gear(int gear_desired){
     //Check speed and wait until car is not moving
     while(abs(speed) > 0.1){
+
       command.brake_cmd = 0.23;
       command.steering_cmd = 0.0;
       command.throttle_cmd = 0.0;
@@ -64,7 +65,7 @@ public:
       pubcmd_.publish(command);
     }
     //shift gear to desired position
-    command.steering_cmd = 0.0 ;
+    command.steering_cmd = 0.0;
     command.throttle_cmd = 0.0;
     command.brake_cmd = 0.23;
     command.gear_cmd = gear_desired;
@@ -72,8 +73,6 @@ public:
     pubcmd_.publish(command);
     ros::Rate loop_rate(1);
     loop_rate.sleep();
-
-
   }
 
   void modeCallback(const std_msgs::String::ConstPtr &msg)
@@ -104,6 +103,7 @@ public:
     speed = (msg->rear_left + msg->rear_left)/2; //radius per second
     speed = speed/(2*PI); //round per second
     speed = speed * PI * diameter; //meter per second
+
   }
   
   double quaterniontoyaw(double x, double y, double z, double w) {
@@ -320,7 +320,8 @@ public:
         }
         else{
           command.brake_cmd = 0.0;
-          command.throttle_cmd = 0.2;
+          command.throttle_cmd = 0.26;
+
         }
         command.steering_cmd = control_command[1];
         if(current_dir > 0){
@@ -382,6 +383,7 @@ private:
   double accel=0;
   double throttle=0;
   double speed = 0;
+  double ref_v = 1.8;
   vector <double> control_command;
   //Indicator
   string car_mode = "followpath";
