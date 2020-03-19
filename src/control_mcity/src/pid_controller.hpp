@@ -184,3 +184,101 @@ vector<double> cal_control_command(Path_Final* path, double px, double py, doubl
   return control_command; 
 }
 
+
+double speed_PID_control(double speed, double targ_speed, double &errIntegral){
+  double PID_P = 0.75;  //P-speed error
+  double PID_I = 0.12;  //D-speed error
+  double speedGap = targ_speed - speed;
+
+  double P_Val = PID_P * speedGap;
+
+  errIntegral += speedGap * 0.04;
+
+
+  if (speedGap > 0.8  && speed < 0.25 ) // start
+        errIntegral = 0;
+
+    if (speedGap < -0.6 && errIntegral >-3 )
+        errIntegral -= 0.45;
+    
+    if (speedGap > 0.8 && errIntegral <3 )
+        errIntegral += 0.35;
+
+    errIntegral = max(-35.0, min(35.0, errIntegral));
+
+    double I_Val = PID_I * errIntegral;
+    
+    // consider road load
+    
+
+    return P_Val + I_Val;
+
+}
+
+double cal_throttle_pedal_opening(double acceleration){
+    double throttle_Table[3][2] = //throttle command, acceleration
+    {
+        {0.00, 0.10},
+        {0.15, 0.30}, //0.65
+        {0.60, 4.00}
+    };
+  
+  double pedal_opening_command = 0;
+
+  if(acceleration <= throttle_Table[0][1])
+      return pedal_opening_command;
+
+  if(acceleration >= throttle_Table[2][1])
+      return pedal_opening_command;
+
+  for (int i = 0; i < 2; ++i)
+  {
+      if ( acceleration >= throttle_Table[i+0][1] &&
+            acceleration <  throttle_Table[i+1][1])
+      {
+          pedal_opening_command = 
+              throttle_Table[i][0] + (acceleration - throttle_Table[i][1])
+              * (throttle_Table[i+1][0] - throttle_Table[i][0])
+              / (throttle_Table[i+1][1] - throttle_Table[i][1]);
+              
+              break;
+      }
+  }
+
+  return pedal_opening_command;
+
+}
+
+
+double cal_brake_pedal_opening(double deceleration)
+{
+   double brake_Table[6][2] = //opening command,torque
+    {
+        {0.180, 0.0},
+        {0.205, 200},
+        {0.210, 400},
+        {0.240, 536},
+        {0.280, 1632},
+        {0.320, 3068}
+    };
+    double torque_demand = 1800 * fabs(deceleration) * 0.673 / 2;
+    double pedal_opening_command = 0;
+
+    if ( torque_demand >= brake_Table[5][1]) //row 10
+        return brake_Table[5][0];
+
+    for (int i = 0; i < 5; ++i)
+    {
+        if (torque_demand >= brake_Table[i][1] && torque_demand < brake_Table[i+1][1])
+        {
+            pedal_opening_command = 
+                brake_Table[i][0] + (torque_demand - brake_Table[i][1])
+                * (brake_Table[i+1][0] - brake_Table[i][0])
+                / (brake_Table[i+1][1] - brake_Table[i][1]);
+
+            break;
+        }
+    }
+
+    return pedal_opening_command;
+}

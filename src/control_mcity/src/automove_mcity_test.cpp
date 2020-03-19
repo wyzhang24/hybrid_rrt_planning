@@ -157,6 +157,31 @@ public:
     m.getRPY(roll,pitch,yaw);
     current_yaw = yaw;
     */
+    speed_controlValue = speed_PID_control(speed, targ_speed, errIntegral);      
+    if ( speed_controlValue > 0){
+		  command.brake_cmd = 0;
+
+      speed_controlValue = min(3.0, speed_controlValue);
+      command.throttle_cmd = cal_throttle_pedal_opening(speed_controlValue);
+
+		  command.throttle_cmd = min (0.28, command.throttle_cmd);
+		}
+		else
+		{
+      command.throttle_cmd  = 0;
+
+      double maxBrake = min(5.5, 3.5 + 0.15* fabs(speed));
+      speed_controlValue = min(fabs(speed_controlValue), maxBrake);
+      command.brake_cmd = cal_brake_pedal_opening(speed_controlValue);
+      command.brake_cmd = min(0.7, command.brake_cmd);
+		}
+
+
+
+
+
+
+
     if(car_mode == "gostraight"){
       cout << "ENTER THE FOWARD EXPLORE MODE" <<endl;
       if(first_go_straight){
@@ -310,19 +335,19 @@ public:
         cout << "Following Path" << endl;
         // Already shifted to the correct gear while segementating the path
         // Start to move
-        if(current_dir>0.5 && accel < 0){
-          command.brake_cmd = 0.15;
-          command.throttle_cmd = 0.0;
-        }
-        if(current_dir<0.5 && accel > 0){
-          command.brake_cmd = 0.15;
-          command.throttle_cmd = 0.0;
-        }
-        else{
-          command.brake_cmd = 0.0;
-          command.throttle_cmd = 0.26;
+        // if(current_dir>0.5 && accel < 0){
+        //   command.brake_cmd = 0.15;
+        //   command.throttle_cmd = 0.0;
+        // }
+        // if(current_dir<0.5 && accel > 0){
+        //   command.brake_cmd = 0.15;
+        //   command.throttle_cmd = 0.0;
+        // }
+        // else{
+        //   command.brake_cmd = 0.0;
+        //   command.throttle_cmd = 0.26;
 
-        }
+        // }
         command.steering_cmd = control_command[1];
         if(current_dir > 0){
           if(command.steering_cmd > 0){
@@ -385,6 +410,10 @@ private:
   double speed = 0;
   double ref_v = 1.8;
   vector <double> control_command;
+  double errIntegral = 0;
+  double targ_speed = 0.25;
+  double speed_controlValue = 0;
+
   //Indicator
   string car_mode = "followpath";
   // string car_mode = "stop";
