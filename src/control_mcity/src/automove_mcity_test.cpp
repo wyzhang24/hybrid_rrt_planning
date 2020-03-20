@@ -71,7 +71,7 @@ public:
     command.gear_cmd = gear_desired;
     cout << "switch should be switched to gear " << command.gear_cmd << endl;
     pubcmd_.publish(command);
-    ros::Rate loop_rate(1);
+    ros::Rate loop_rate(2);
     loop_rate.sleep();
   }
 
